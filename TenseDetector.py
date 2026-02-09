@@ -38,8 +38,6 @@ class TenseDetector:
             return tenseStructureString
 
     def __init__(self):
-        self.returnType = str
-        self._EnglishWords = set(nltk.corpus.words.words())
         self._nlp = spacy.load("en_core_web_sm")
         self._ruler = self._nlp.get_pipe("attribute_ruler")
         self._tagFilters = ["VBG","VBN","VB","TO","VBP","VBZ","VBD","NNS"]
@@ -151,7 +149,7 @@ class TenseDetector:
         doc = self._nlp(sentence)
         filteredTaggedSentence = [(token.text, token.tag_) for token in doc if token.tag_ in self._tagFilters]
         if len(filteredTaggedSentence) == 0: #if there is nothing left in the sentence
-            return []
+            return "", []
         cp = nltk.RegexpParser(self._tensesGrammar)
         result = cp.parse(filteredTaggedSentence,trace=0)
 
@@ -168,3 +166,4 @@ class TenseDetector:
             results.append(self._determineTense(sentence))
         
         return results
+
