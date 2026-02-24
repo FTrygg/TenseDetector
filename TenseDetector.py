@@ -100,8 +100,8 @@ class TenseDetector:
         self._tenses.append(TenseDetector._Tense("can_present",                             ["CAN", "VB"],                                      ["I can watch the movie."]))
         self._tenses.append(TenseDetector._Tense("could_past_passive",                      ["COULD", "BE", "VBN"],                             ["The movie could be watched."]))
         self._tenses.append(TenseDetector._Tense("could_past",                              ["COULD", "VB"],                                    ["I could watch the movie."]))
-        self._tenses.append(TenseDetector._Tense("Might_passive",                           [["MAY, MIGHT"], "BE", "VBN"],                      ["The movie may be watched.", "The movie might be watched."]))
-        self._tenses.append(TenseDetector._Tense("Might",                                   [["MAY, MIGHT"],"VB"],                              ["I may watch the movie.", "I might watch the movie."]))
+        self._tenses.append(TenseDetector._Tense("Might_passive",                           [["MAY", "MIGHT"], "BE", "VBN"],                      ["The movie may be watched.", "The movie might be watched."]))
+        self._tenses.append(TenseDetector._Tense("Might",                                   [["MAY", "MIGHT"],"VB"],                              ["I may watch the movie.", "I might watch the movie."]))
         self._tenses.append(TenseDetector._Tense("Should_passive",                          [["SHALL", "SHOULD"], "BE", "VBN"],                 ["The movie should be watched."]))
         self._tenses.append(TenseDetector._Tense("Should",                                  [["SHALL", "SHOULD"],"VB"],                         ["I should watch the movie.", "I shall watch the movie."]))
         self._tenses.append(TenseDetector._Tense("past_continuous_passive",                 [["WAS", "WERE"], "BEING", "VBN"],                  ["The movie was being watched.", "The movies were being watched"]))
@@ -166,4 +166,5 @@ class TenseDetector:
             results.append(self._determineTense(sentence))
         
         return results
+
 
