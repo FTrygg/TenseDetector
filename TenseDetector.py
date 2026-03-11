@@ -1,89 +1,98 @@
-import nltk
 import re
+import nltk
 import spacy
 
 class TenseDetector:
-    class _CustomToken:
+    class CustomToken:
         CustomTokens = []
-        def __init__(self, tokenTag, textPattern, requiredTag):
-            self._tokenTag = tokenTag
-            self._textPattern = textPattern 
-            self._requiredTag = requiredTag
-            TenseDetector._CustomToken.CustomTokens.append(self)
+        def __init__(self, token_tag, text_pattern, required_tag):
+            self.token_tag = token_tag
+            self.text_pattern = text_pattern
+            self.required_tag = required_tag
+            TenseDetector.CustomToken.CustomTokens.append(self)
 
     class _Tense:
-        def __init__(self, name, tenseStructure, examples = [""]):
-            self._tenseName = name
-            self._tenseStructure = tenseStructure #list
-            self._examples = examples
-        
-        def getTenseStructure(self):
-            tenseStructureString = "{"
-            for element in self._tenseStructure:
-                if type(element) == list:
-                    subElements = []
-                    for tag in element:
-                        subElements.append(tag)
-                        subElements.extend([specialTag._tokenTag for specialTag in TenseDetector._CustomToken.CustomTokens if (tag in specialTag._requiredTag)])
+        def __init__(self, name, tense_structure, examples = [""]):
+            self.tense_name = name
+            self.tense_structure = tense_structure
+            self.examples = examples
 
-                    tenseStructureString = tenseStructureString + f"<{"|".join(subElements)}>"
-                    
+        def get_tense_structure(self) -> str:
+            """
+            Creates a lookup string for the tense, taking into account that special tags might have multiple roles.
+
+            Returns
+            -------
+            str
+                Returns
+                String of tense structure.
+            """
+            tense_structure_string = "{"
+            for element in self.tense_structure:
+                if isinstance(element, list):
+                    sub_elements = []
+                    for tag in element:
+                        sub_elements.append(tag)
+                        sub_elements.extend([specialTag.token_tag for specialTag in TenseDetector.CustomToken.CustomTokens if tag in specialTag.required_tag])
+
+                    tense_structure_string = tense_structure_string + f"<{"|".join(sub_elements)}>"
+
                 else:
-                    subElements = []
-                    subElements.append(element)
-                    subElements.extend([specialTag._tokenTag for specialTag in TenseDetector._CustomToken.CustomTokens if (element in specialTag._requiredTag)])
-                    tenseStructureString = tenseStructureString + f"<{"|".join(subElements)}>"
-            
-            tenseStructureString = tenseStructureString + "+}"
-            return tenseStructureString
+                    sub_elements = []
+                    sub_elements.append(element)
+                    sub_elements.extend([specialTag.token_tag for specialTag in TenseDetector.CustomToken.CustomTokens if element in specialTag.required_tag])
+                    tense_structure_string = tense_structure_string + f"<{"|".join(sub_elements)}>"
+
+            tense_structure_string = tense_structure_string + "+}"
+            return tense_structure_string
 
     def __init__(self):
         self._nlp = spacy.load("en_core_web_sm")
         self._ruler = self._nlp.get_pipe("attribute_ruler")
-        self._tagFilters = ["VBG","VBN","VB","TO","VBP","VBZ","VBD","NNS"]
-        self._setCustomTags()
+        self._tag_filters = ["VBG","VBN","VB","TO","VBP","VBZ","VBD","NNS"]
+        self._setcustom_tags()
         self._tenses = []
-        self._tenseNames = []
-        self._tensesGrammar = ""
-        self._setTenseGrammar()
-        
+        self.tense_names = []
+        self._tenses_grammar = ""
+        self._set_tense_grammar()
 
-    def _setCustomTags(self):
-        TenseDetector._CustomToken("HAD",       ["had"],            ["VBD"])
-        TenseDetector._CustomToken("BEEN",      ["been"],           ["VBN"])
-        TenseDetector._CustomToken("GOING",     ["going"],          ["VBG"])
-        TenseDetector._CustomToken("BEING",     ["being"],          ["VBG"])
-        TenseDetector._CustomToken("WILL",      ["will","'ll"],     ["MD"])
-        TenseDetector._CustomToken("IS",        ["is","'s"],        ["VBZ"])
-        TenseDetector._CustomToken("ARE",       ["are"],            ["VBP"])
-        TenseDetector._CustomToken("AM",        ["am","'m"],        ["VBP"])
-        TenseDetector._CustomToken("BE",        ["be"],             ["VB"])
-        TenseDetector._CustomToken("HAS",       ["has"],            ["VBZ"])
-        TenseDetector._CustomToken("WAS",       ["was"],            ["VBD"])
-        TenseDetector._CustomToken("WERE",      ["were"],           ["VBD"])
-        TenseDetector._CustomToken("HAVE",      ["have","'ve"],     ["VBP","VB"])
-        TenseDetector._CustomToken("WOULD",     ["would","'d"],     ["MD"])
-        TenseDetector._CustomToken("MAY",       ["may"],            ["MD"])
-        TenseDetector._CustomToken("MIGHT",     ["might"],          ["MD"])
-        TenseDetector._CustomToken("CAN",       ["can"],            ["MD"])
-        TenseDetector._CustomToken("COULD",     ["could"],          ["MD"])
-        TenseDetector._CustomToken("SHALL",     ["shall"],          ["MD"])
-        TenseDetector._CustomToken("SHOULD",    ["should"],         ["MD"])
-        TenseDetector._CustomToken("MUST",      ["must"],           ["MD"])
-        TenseDetector._CustomToken("OUGHT",     ["ought"],          ["MD"])
 
-        for customTag in TenseDetector._CustomToken.CustomTokens:
+    def _setcustom_tags(self) -> None:
+        TenseDetector.CustomToken("HAD",       ["had"],            ["VBD"])
+        TenseDetector.CustomToken("BEEN",      ["been"],           ["VBN"])
+        TenseDetector.CustomToken("GOING",     ["going"],          ["VBG"])
+        TenseDetector.CustomToken("BEING",     ["being"],          ["VBG"])
+        TenseDetector.CustomToken("WILL",      ["will","'ll"],     ["MD"])
+        TenseDetector.CustomToken("IS",        ["is","'s"],        ["VBZ"])
+        TenseDetector.CustomToken("ARE",       ["are"],            ["VBP"])
+        TenseDetector.CustomToken("AM",        ["am","'m"],        ["VBP"])
+        TenseDetector.CustomToken("BE",        ["be"],             ["VB"])
+        TenseDetector.CustomToken("HAS",       ["has"],            ["VBZ"])
+        TenseDetector.CustomToken("WAS",       ["was"],            ["VBD"])
+        TenseDetector.CustomToken("WERE",      ["were"],           ["VBD"])
+        TenseDetector.CustomToken("HAVE",      ["have","'ve"],     ["VBP","VB"])
+        TenseDetector.CustomToken("WOULD",     ["would","'d"],     ["MD"])
+        TenseDetector.CustomToken("MAY",       ["may"],            ["MD"])
+        TenseDetector.CustomToken("MIGHT",     ["might"],          ["MD"])
+        TenseDetector.CustomToken("CAN",       ["can"],            ["MD"])
+        TenseDetector.CustomToken("COULD",     ["could"],          ["MD"])
+        TenseDetector.CustomToken("SHALL",     ["shall"],          ["MD"])
+        TenseDetector.CustomToken("SHOULD",    ["should"],         ["MD"])
+        TenseDetector.CustomToken("MUST",      ["must"],           ["MD"])
+        TenseDetector.CustomToken("OUGHT",     ["ought"],          ["MD"])
+
+        for custom_tag in TenseDetector.CustomToken.CustomTokens:
             pattern = [
                 {
-                    "LOWER" : {"IN": customTag._textPattern}, 
-                    "TAG": {"IN": customTag._requiredTag}
+                    "LOWER" : {"IN": custom_tag.text_pattern}, 
+                    "TAG": {"IN": custom_tag.required_tag}
                 }
             ]
-            attrs = {"TAG": customTag._tokenTag}
+            attrs = {"TAG": custom_tag.token_tag}
             self._ruler.add(patterns=[pattern], attrs=attrs)
-            self._tagFilters.append(customTag._tokenTag)
+            self._tag_filters.append(custom_tag.token_tag)
 
-    def _setTenseGrammar(self):
+    def _set_tense_grammar(self) -> None:
         self._tenses.append(TenseDetector._Tense("conditional_perfect_continuous",          ["WOULD", "HAVE", "BEEN", "VBG"],                   ["I would have been watching the movie."]))
         self._tenses.append(TenseDetector._Tense("conditional_perfect",                     ["WOULD", "HAVE", "VBN"],                           ["I would have watched the movie."]))
         self._tenses.append(TenseDetector._Tense("conditional_continuous",                  ["WOULD", "BE", "VBG"],                             ["I would be watching the movie."]))
@@ -100,8 +109,8 @@ class TenseDetector:
         self._tenses.append(TenseDetector._Tense("can_present",                             ["CAN", "VB"],                                      ["I can watch the movie."]))
         self._tenses.append(TenseDetector._Tense("could_past_passive",                      ["COULD", "BE", "VBN"],                             ["The movie could be watched."]))
         self._tenses.append(TenseDetector._Tense("could_past",                              ["COULD", "VB"],                                    ["I could watch the movie."]))
-        self._tenses.append(TenseDetector._Tense("Might_passive",                           [["MAY", "MIGHT"], "BE", "VBN"],                      ["The movie may be watched.", "The movie might be watched."]))
-        self._tenses.append(TenseDetector._Tense("Might",                                   [["MAY", "MIGHT"],"VB"],                              ["I may watch the movie.", "I might watch the movie."]))
+        self._tenses.append(TenseDetector._Tense("Might_passive",                           [["MAY", "MIGHT"], "BE", "VBN"],                    ["The movie may be watched.", "The movie might be watched."]))
+        self._tenses.append(TenseDetector._Tense("Might",                                   [["MAY", "MIGHT"],"VB"],                            ["I may watch the movie.", "I might watch the movie."]))
         self._tenses.append(TenseDetector._Tense("Should_passive",                          [["SHALL", "SHOULD"], "BE", "VBN"],                 ["The movie should be watched."]))
         self._tenses.append(TenseDetector._Tense("Should",                                  [["SHALL", "SHOULD"],"VB"],                         ["I should watch the movie.", "I shall watch the movie."]))
         self._tenses.append(TenseDetector._Tense("past_continuous_passive",                 [["WAS", "WERE"], "BEING", "VBN"],                  ["The movie was being watched.", "The movies were being watched"]))
@@ -115,56 +124,79 @@ class TenseDetector:
         self._tenses.append(TenseDetector._Tense("past_perfect_passive",                    ["HAD", "BEEN", "VBN"],                             ["The movie had been watched."]))
         self._tenses.append(TenseDetector._Tense("past_perfect",                            ["HAD", "VBN"],                                     ["I had watched the movie (before you arrived)."]))
         self._tenses.append(TenseDetector._Tense("past_simple_passive",                     [["WAS", "WERE"], "VBN"],                           ["The movie was watched.", "The movies were watched."]))
-        self._tenses.append(TenseDetector._Tense("present_simple_passive",                  [["AM", "IS", "ARE"], "VBN"],                       ["The movie is watched.", "The movies are watched.", "I am watched."]))                        
+        self._tenses.append(TenseDetector._Tense("present_simple_passive",                  [["AM", "IS", "ARE"], "VBN"],                       ["The movie is watched.", "The movies are watched.", "I am watched."]))
         self._tenses.append(TenseDetector._Tense("past_simple",                             ["VBD"],                                            ["I watched the movie."]))
         self._tenses.append(TenseDetector._Tense("present_simple",                          [["VBP", "VBZ"]],                                   ["I watch the movie."]))
         self._tenses.append(TenseDetector._Tense("infinitive",                              ["TO", "VB"],                                       ["I (like) to watch the movie"]))
 
-        
         for tense in self._tenses:
-            self._tensesGrammar = self._tensesGrammar + f"{tense._tenseName}: {tense.getTenseStructure()}\n"
-            self._tenseNames.append(tense._tenseName)
+            self._tenses_grammar = self._tenses_grammar + f"{tense.tense_name}: {tense.get_tense_structure()}\n"
+            self.tense_names.append(tense.tense_name)
 
-    def listTenses(self, text, splitSentences=False): 
-        if type(text) == list:
-            return self._determineTenses(text)
+    def list_tenses(self, text : (str|list[str]), split_sentences=False) -> (tuple[str, list[str]] | tuple[list[str], list[list[str]]]):
+        """
+        Lists the tenses of a text or list of texts.
 
-        if type(text) == str:
+        Parameters
+        ----------
+        text : (str/list[str])
+            Text or list of texts to analyze.
+        split_sentences : bool
+            When passing single string, option to split into sentences.
+
+        Returns
+        -------
+        tuple[str, list[str]]/tuple[list[str], list[list[str]]]
+            If a single, text is passed with ``split_sentences = false`` returns the text and the list of tenses in that text.
+            If a list of texts is passed or a text with ``split_sentences = true`` returns the list of sentences and a list of their corresponding tenses.
+
+        Examples
+        --------
+        >>> list_tenses(["The movie has been watched. The movies have been watched."])
+        ('The movie has been watched. The movies have been watched.', ['present_perfect_passive', 'present_perfect_passive'])]
+        >>> list_tenses(["The movie has been watched. The movies have been watched."],split_sentences = True)
+        [('The movie has been watched. The movies have been watched.', ['present_perfect_passive', 'present_perfect_passive'])]
+        >>> list_tenses(["The movie has been watched.", "The movies have been watched."])
+        [('The movie has been watched.', ['present_perfect_passive']), ('The movies have been watched.', ['present_perfect_passive'])]
+        """
+
+        if isinstance(text, list):
+            return self._determine_tenses(text)
+
+        if isinstance(text, str):
             #if its supposed to be split
-            if splitSentences == True:
-                sentences = self._splitSentences(text)
-                return self._determineTenses(sentences)
+            if split_sentences:
+                sentences = self._split_sentences(text)
+                return self._determine_tenses(sentences)
             else:
-                return self._determineTense(text)
-        
-    def _checkTenseGrammar(self): #check whether the example sentences are all detected
-        for tense in self._tenses:
-            for sentence in tense._examples:
-                print(f"{tense._tenseName}:{self._determineTense(sentence)}")
+                return self._determine_tense(text)
 
-    def _splitSentences(self, text : str) -> list[str]:
+    def _check_tense_grammar(self): #check whether the example sentences are all detected
+        for tense in self._tenses:
+            for sentence in tense.examples:
+                print(f"{tense.tense_name}:{self._determine_tense(sentence)}")
+
+    def _split_sentences(self, text : str) -> list[str]:
         return re.split(r"[.!?]\s+(?=[A-Z])", text)
 
-    def _determineTense(self, sentence : str):
+    def _determine_tense(self, sentence : str):
         doc = self._nlp(sentence)
-        filteredTaggedSentence = [(token.text, token.tag_) for token in doc if token.tag_ in self._tagFilters]
-        if len(filteredTaggedSentence) == 0: #if there is nothing left in the sentence
+        filtered_tagged_sentence = [(token.text, token.tag_) for token in doc if token.tag_ in self._tag_filters]
+        if len(filtered_tagged_sentence) == 0: #if there is nothing left in the sentence
             return "", []
-        cp = nltk.RegexpParser(self._tensesGrammar)
-        result = cp.parse(filteredTaggedSentence,trace=0)
+        cp = nltk.RegexpParser(self._tenses_grammar)
+        result = cp.parse(filtered_tagged_sentence,trace=0)
 
         tenses = []
         for subtree in result.subtrees():
-            if subtree.label() in self._tenseNames:
+            if subtree.label() in self.tense_names:
                 tenses.append(subtree.label())
 
         return sentence, tenses
 
-    def _determineTenses(self, sentences : list[str]):
+    def _determine_tenses(self, sentences : list[str]):
         results = []
         for sentence in sentences:
-            results.append(self._determineTense(sentence))
-        
+            results.append(self._determine_tense(sentence))
+
         return results
-
-
